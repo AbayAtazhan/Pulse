@@ -1,0 +1,279 @@
+{
+    "match_id": 3857276,
+    "home_team": "Canada",
+    "away_team": "Morocco",
+    "events": [
+        {
+            "minute": 0,
+            "second": 0,
+            "team": "Morocco",
+            "player": null,
+            "type": "Half Start",
+            "details": ""
+        },
+        {
+            "minute": 0,
+            "second": 0,
+            "team": "Canada",
+            "player": null,
+            "type": "Half Start",
+            "details": ""
+        },
+        {
+            "minute": 2,
+            "second": 5,
+            "team": "Canada",
+            "player": "Mark Anthony Kaye",
+            "type": "Shot",
+            "details": "Shot outcome: Blocked"
+        },
+        {
+            "minute": 3,
+            "second": 29,
+            "team": "Morocco",
+            "player": "Hakim Ziyech",
+            "type": "Goal",
+            "details": "Shot outcome: Goal"
+        },
+        {
+            "minute": 6,
+            "second": 43,
+            "team": "Canada",
+            "player": "David Junior Hoilett",
+            "type": "Card",
+            "details": "Card type: Yellow Card"
+        },
+        {
+            "minute": 8,
+            "second": 18,
+            "team": "Morocco",
+            "player": "Abdelhamid Sabiri",
+            "type": "Shot",
+            "details": "Shot outcome: Blocked"
+        },
+        {
+            "minute": 9,
+            "second": 9,
+            "team": "Morocco",
+            "player": "Sofiane Boufal",
+            "type": "Shot",
+            "details": "Shot outcome: Wayward"
+        },
+        {
+            "minute": 14,
+            "second": 7,
+            "team": "Canada",
+            "player": "Tajon Buchanan",
+            "type": "Shot",
+            "details": "Shot outcome: Off T"
+        },
+        {
+            "minute": 15,
+            "second": 6,
+            "team": "Morocco",
+            "player": "Hakim Ziyech",
+            "type": "Shot",
+            "details": "Shot outcome: Off T"
+        },
+        {
+            "minute": 22,
+            "second": 36,
+            "team": "Morocco",
+            "player": "Youssef En-Nesyri",
+            "type": "Goal",
+            "details": "Shot outcome: Goal"
+        },
+        {
+            "minute": 25,
+            "second": 39,
+            "team": "Canada",
+            "player": "Jonathan Osorio",
+            "type": "Card",
+            "details": "Card type: Yellow Card"
+        },
+        {
+            "minute": 32,
+            "second": 45,
+            "team": "Morocco",
+            "player": "Abdelhamid Sabiri",
+            "type": "Shot",
+            "details": "Shot outcome: Blocked"
+        },
+        {
+            "minute": 45,
+            "second": 0,
+            "team": "Morocco",
+            "player": null,
+            "type": "Half Start",
+            "details": ""
+        },
+        {
+            "minute": 45,
+            "second": 0,
+            "team": "Canada",
+            "player": null,
+            "type": "Half Start",
+            "details": ""
+        },
+        {
+            "minute": 46,
+            "second": 25,
+            "team": "Canada",
+            "player": "Sam Adekugbe",
+            "type": "Card",
+            "details": "Card type: Yellow Card"
+        },
+        {
+            "minute": 47,
+            "second": 18,
+            "team": "Morocco",
+            "player": "Youssef En-Nesyri",
+            "type": "Shot",
+            "details": "Shot outcome: Wayward"
+        },
+        {
+            "minute": 50,
+            "second": 5,
+            "team": "Morocco",
+            "player": null,
+            "type": "Half End",
+            "details": ""
+        },
+        {
+            "minute": 50,
+            "second": 5,
+            "team": "Canada",
+            "player": null,
+            "type": "Half End",
+            "details": ""
+        },
+        {
+            "minute": 57,
+            "second": 6,
+            "team": "Canada",
+            "player": "Alphonso Davies",
+            "type": "Shot",
+            "details": "Shot outcome: Off T"
+        },
+        {
+            "minute": 59,
+            "second": 47,
+            "team": "Canada",
+            "player": "Cyle Larin",
+            "type": "Substitution",
+            "details": "Replaced by: Jonathan David"
+        },
+        {
+            "minute": 59,
+            "second": 51,
+            "team": "Canada",
+            "player": "Mark Anthony Kaye",
+            "type": "Substitution",
+            "details": "Replaced by: Atiba Hutchinson"
+        },
+        {
+            "minute": 60,
+            "second": 12,
+            "team": "Canada",
+            "player": "Sam Adekugbe",
+            "type": "Substitution",
+            "details": "Replaced by: Ismael Koné"
+        },
+        {
+            "minute": 64,
+            "second": 10,
+            "team": "Morocco",
+            "player": "Sofiane Boufal",
+            "type": "Substitution",
+            "details": "Replaced by: Zakaria Aboukhlal"
+        },
+        {
+            "minute": 64,
+            "second": 28,
+            "team": "Morocco",
+            "player": "Abdelhamid Sabiri",
+            "type": "Substitution",
+            "details": "Replaced by: Selim Amallah"
+        },
+        {
+            "minute": 65,
+            "second": 4,
+            "team": "Canada",
+            "player": "Jonathan Osorio",
+            "type": "Substitution",
+            "details": "Replaced by: Richie Laryea"
+        },
+        {
+            "minute": 70,
+            "second": 55,
+            "team": "Canada",
+            "player": "Atiba Hutchinson",
+            "type": "Shot",
+            "details": "Shot outcome: Post"
+        },
+        {
+            "minute": 70,
+            "second": 57,
+            "team": "Canada",
+            "player": "Alistair Johnston",
+            "type": "Shot",
+            "details": "Shot outcome: Off T"
+        },
+        {
+            "minute": 75,
+            "second": 24,
+            "team": "Canada",
+            "player": "David Junior Hoilett",
+            "type": "Substitution",
+            "details": "Replaced by: David Wallace Wotherspoon"
+        },
+        {
+            "minute": 75,
+            "second": 36,
+            "team": "Morocco",
+            "player": "Hakim Ziyech",
+            "type": "Substitution",
+            "details": "Replaced by: Abderrazak Hamdallah"
+        },
+        {
+            "minute": 75,
+            "second": 48,
+            "team": "Morocco",
+            "player": "Azzedine Ounahi",
+            "type": "Substitution",
+            "details": "Replaced by: Jawad El Yamiq"
+        },
+        {
+            "minute": 83,
+            "second": 49,
+            "team": "Canada",
+            "player": "Steven de Sousa Vitoria",
+            "type": "Card",
+            "details": "Card type: Yellow Card"
+        },
+        {
+            "minute": 84,
+            "second": 55,
+            "team": "Morocco",
+            "player": "Achraf Hakimi Mouh",
+            "type": "Substitution",
+            "details": "Replaced by: Yahya Jabrane"
+        },
+        {
+            "minute": 93,
+            "second": 54,
+            "team": "Morocco",
+            "player": null,
+            "type": "Half End",
+            "details": ""
+        },
+        {
+            "minute": 93,
+            "second": 54,
+            "team": "Canada",
+            "player": null,
+            "type": "Half End",
+            "details": ""
+        }
+    ]
+}

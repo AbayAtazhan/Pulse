@@ -1,0 +1,10 @@
+from langchain_core.output_parsers import JsonOutputParser
+prompt = ChatPromptTemplate.from_messages([
+ ("system", "Return ONLY a JSON list of question strings. No extra text."),
+ ("human", "Write {n} short questions about {topic}."),
+])
+chain = prompt | llm | JsonOutputParser()
+questions = chain.invoke({"n": 3, "topic": "Python lists"})
+print(type(questions)) # <class 'list'>
+for q in questions:
+ print("-", q
