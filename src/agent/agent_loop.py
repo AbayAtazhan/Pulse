@@ -113,6 +113,28 @@ def validate_predictions(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def call_llm(system_prompt: str, user_prompt: str, model_name: str, temperature: float = 0.0) -> str:
+    if "gemma" in model_name.lower():
+        openai_base = "http://localhost:8000/v1"
+        openai_key = "dummy"
+        logging.info(f"Routing Gemma query to locally forwarded port: {openai_base}")
+        headers = {
+            "Authorization": f"Bearer {openai_key}",
+            "content-type": "application/json",
+        }
+        payload = {
+            "model": model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": temperature,
+            "max_tokens": 2048,
+        }
+        endpoint = f"{openai_base.rstrip('/')}/chat/completions"
+        response = requests.post(endpoint, headers=headers, json=payload, timeout=120)
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"].strip()
+
     base_url = os.environ.get("ANTHROPIC_BASE_URL")
     token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
     
