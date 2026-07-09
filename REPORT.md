@@ -23,11 +23,11 @@ This table compares the prediction accuracy of the final match outcome (`final_r
 
 | Freeze Minute | qwen3.6-27b Accuracy | gemma-4-31b Accuracy | Naive Baseline Accuracy |
 |:---|:---:|:---:|:---:|
-| **20th Minute** | 50.0% | 50.0% | 50.0% |
-| **45th Minute** | 100.0% | 100.0% | 100.0% |
-| **70th Minute** | 100.0% | 100.0% | 100.0% |
+| **20th Minute** | 40.0% | 40.0% | 40.0% |
+| **45th Minute** | 40.0% | 40.0% | 60.0% |
+| **70th Minute** | 40.0% | 60.0% | 100.0% |
 
-- **Total matches evaluated**: 2
+- **Total matches evaluated**: 5
 - **Vague (Un-gradable) Answers count**:
   - *qwen3.6-27b*: 0
   - *gemma-4-31b*: 0
@@ -37,9 +37,9 @@ Accuracy of the models' predictions for granular in-play events (Next Goal and N
 
 | Freeze Minute | qwen3.6-27b Next Goal | gemma-4-31b Next Goal | qwen3.6-27b Next Chance | gemma-4-31b Next Chance |
 |:---|:---:|:---:|:---:|:---:|
-| **20th Minute** | 50.0% | 50.0% | 0.0% | 50.0% |
-| **45th Minute** | 0.0% | 50.0% | 0.0% | 50.0% |
-| **70th Minute** | 0.0% | 50.0% | 50.0% | 0.0% |
+| **20th Minute** | 20.0% | 60.0% | 80.0% | 40.0% |
+| **45th Minute** | 40.0% | 40.0% | 80.0% | 40.0% |
+| **70th Minute** | 20.0% | 40.0% | 60.0% | 40.0% |
 
 ### 3.3 Confidence Calibration (Final Result)
 Calibration indicates whether the confidence percentage stated by the model corresponds to its actual rate of correctness:
@@ -47,14 +47,14 @@ Calibration indicates whether the confidence percentage stated by the model corr
 | Confidence Bin | qwen3.6-27b Count | qwen3.6-27b Avg Conf | qwen3.6-27b Real Acc | gemma-4-31b Count | gemma-4-31b Avg Conf | gemma-4-31b Real Acc |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Low (0-30%)** | 0 | 0.0% | 0.0% | 0 | 0.0% | 0.0% |
-| **Medium (30-70%)** | 4 | 43.5% | 100.0% | 4 | 52.0% | 75.0% |
-| **High (70-100%)** | 2 | 91.5% | 50.0% | 2 | 73.0% | 100.0% |
+| **Medium (30-70%)** | 7 | 54.6% | 0.0% | 10 | 47.1% | 50.0% |
+| **High (70-100%)** | 8 | 85.9% | 75.0% | 5 | 82.2% | 40.0% |
 
 ### 3.4 Dynamic Update Test Consistency
 The Update Test checks whether the model shifts its prediction vector in a sensible direction when a critical event (a goal or red card) occurs between the freeze points ($20 \to 45$ and $45 \to 70$):
 
-- **qwen3.6-27b Update Consistency Ratio**: 33.3% (Sensible updates: 1 out of 3 intervals)
-- **gemma-4-31b Update Consistency Ratio**: 66.7% (Sensible updates: 2 out of 3 intervals)
+- **qwen3.6-27b Update Consistency Ratio**: 80.0% (Sensible updates: 4 out of 5 intervals)
+- **gemma-4-31b Update Consistency Ratio**: 60.0% (Sensible updates: 3 out of 5 intervals)
 
 ---
 

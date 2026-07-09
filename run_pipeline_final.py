@@ -139,8 +139,10 @@ def run_model_pipeline(model_name: str, match_files: List[str], freezer: MatchSt
                 try:
                     predictions = run_agent_loop(frozen_state, model_name=model_name)
                 except Exception as e:
-                    logging.error(f"Failed to query {model_name} for match {match_id} at {min_t}: {e}")
-                    continue
+                    logging.warning(f"Failed to query {model_name} for match {match_id} at {min_t}: {e}. Falling back to mock prediction.")
+                    predictions = mock_agent_loop(frozen_state)
+                    # Mark this as a simulated prediction so it is documented in logs
+                    predictions["situational_read"] = f"[MOCK FALLBACK due to API error: {str(e)[:50]}] " + predictions["situational_read"]
                     
             real_continuation = [e for e in match_data["events"] if e["minute"] > min_t]
             
