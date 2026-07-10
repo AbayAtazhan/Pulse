@@ -9,15 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #080c14;
-            --card-bg: rgba(17, 24, 39, 0.6);
-            --card-border: rgba(255, 255, 255, 0.05);
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-green: #10b981;
-            --glow-color: rgba(59, 130, 246, 0.15);
+            --bg-color: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(0, 0, 0, 0.06);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-blue: #1d4ed8;
+            --accent-purple: #6d28d9;
+            --accent-green: #047857;
+            --glow-color: rgba(29, 78, 216, 0.06);
         }
 
         * {
@@ -36,15 +36,15 @@
             flex-direction: column;
             justify-content: space-between;
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 40%);
         }
 
         /* Top Progress Bar */
         .progress-container {
             width: 100%;
             height: 4px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.04);
             position: fixed;
             top: 0;
             left: 0;
@@ -72,7 +72,7 @@
             font-size: 1.5rem;
             font-weight: 800;
             letter-spacing: 0.1rem;
-            background: linear-gradient(135deg, #fff 30%, #a78bfa 100%);
+            background: linear-gradient(135deg, #0f172a 30%, #6d28d9 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
@@ -85,7 +85,7 @@
             height: 8px;
             background-color: var(--accent-blue);
             border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-blue);
+            box-shadow: 0 0 10px rgba(29, 78, 216, 0.4);
         }
 
         .slide-counter {
@@ -134,7 +134,7 @@
             font-size: 3.5rem;
             font-weight: 800;
             line-height: 1.15;
-            background: linear-gradient(135deg, #ffffff 40%, #e2e8f0 100%);
+            background: linear-gradient(135deg, #0f172a 40%, #334155 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -168,13 +168,14 @@
             border-radius: 16px;
             padding: 2rem;
             backdrop-filter: blur(12px);
-            transition: border-color 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
         }
 
         .card:hover {
-            border-color: rgba(59, 130, 246, 0.2);
+            border-color: rgba(29, 78, 216, 0.15);
             transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
         }
 
         .card-title {
@@ -189,7 +190,7 @@
 
         .card-number {
             font-size: 0.9rem;
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(29, 78, 216, 0.08);
             color: var(--accent-blue);
             padding: 0.2rem 0.6rem;
             border-radius: 8px;
@@ -212,14 +213,14 @@
         th, td {
             padding: 1rem 1.2rem;
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         th {
             font-family: 'Outfit', sans-serif;
             font-weight: 600;
             color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 0, 0, 0.02);
             font-size: 0.95rem;
         }
 
@@ -230,11 +231,16 @@
 
         tr:hover td {
             color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.01);
+            background: rgba(0, 0, 0, 0.01);
         }
 
         .highlight-col {
             color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .highlight-purple {
+            color: var(--accent-purple);
             font-weight: 600;
         }
 
@@ -252,8 +258,8 @@
         }
 
         .badge {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.06);
             border-radius: 20px;
             padding: 0.5rem 1.2rem;
             font-size: 0.9rem;
@@ -285,7 +291,7 @@
         }
 
         .btn {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(0, 0, 0, 0.02);
             border: 1px solid var(--card-border);
             color: var(--text-primary);
             width: 44px;
@@ -300,10 +306,10 @@
         }
 
         .btn:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.05);
             border-color: var(--accent-blue);
             color: var(--accent-blue);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 15px rgba(29, 78, 216, 0.1);
             transform: scale(1.05);
         }
 
@@ -320,8 +326,8 @@
         }
 
         .kbd {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 4px;
             padding: 0.1rem 0.4rem;
             font-family: monospace;
@@ -444,19 +450,19 @@
                             <tr>
                                 <td>**20th Minute**</td>
                                 <td class="highlight-col">40.0%</td>
-                                <td class="highlight-purple" style="color: var(--accent-purple); font-weight:600;">40.0%</td>
+                                <td class="highlight-purple">40.0%</td>
                                 <td>40.0%</td>
                             </tr>
                             <tr>
                                 <td>**45th Minute**</td>
                                 <td class="highlight-col">40.0%</td>
-                                <td class="highlight-purple" style="color: var(--accent-purple); font-weight:600;">40.0%</td>
+                                <td class="highlight-purple">40.0%</td>
                                 <td>60.0%</td>
                             </tr>
                             <tr>
                                 <td>**70th Minute**</td>
                                 <td class="highlight-col" style="font-size:1.1rem;">80.0%</td>
-                                <td class="highlight-purple" style="color: var(--accent-purple); font-weight:800; font-size:1.1rem;">80.0%</td>
+                                <td class="highlight-purple" style="font-weight:800; font-size:1.1rem;">80.0%</td>
                                 <td style="font-weight: 600;">100.0%</td>
                             </tr>
                         </tbody>
@@ -472,7 +478,7 @@
             </div>
         </div>
 
-        <!-- Slide 4: Calibration & Update Sensitivity -->
+        <!-- Slide 4: Calibration & Adaptability -->
         <div class="slide" id="slide4">
             <div class="slide-subtitle">04 / Calibration & Adaptability</div>
             <h2>How Well Do Models Know What They Know?</h2>
