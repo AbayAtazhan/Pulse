@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse: In-Play Match Reasoning Presentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #080c14;
+            --card-bg: rgba(17, 24, 39, 0.6);
+            --card-border: rgba(255, 255, 255, 0.05);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --glow-color: rgba(59, 130, 246, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+        }
+
+        /* Top Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 20%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Header */
+        header {
+            padding: 2.5rem 4rem 1rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 0.1rem;
+            background: linear-gradient(135deg, #fff 30%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        .slide-counter {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Slide Container & Animations */
+        .slides-viewport {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4rem;
+            position: relative;
+        }
+
+        .slide {
+            width: 100%;
+            max-width: 1100px;
+            position: absolute;
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+            position: relative;
+        }
+
+        /* Typography & Layout elements */
+        h1, h2 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .slide h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #ffffff 40%, #e2e8f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-subtitle {
+            font-size: 1.25rem;
+            color: var(--accent-blue);
+            font-weight: 600;
+            letter-spacing: 0.05rem;
+            text-transform: uppercase;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2.5rem;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover {
+            border-color: rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-number {
+            font-size: 0.9rem;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        /* Tables styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        th, td {
+            padding: 1rem 1.2rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 0.95rem;
+        }
+
+        td {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        tr:hover td {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .highlight-col {
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .highlight-green {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        /* Badges */
+        .badge-container {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        /* Footer / Navigation Controls */
+        footer {
+            padding: 1rem 4rem 2.5rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .instruction-tag {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .kbd {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        /* Bullet lists */
+        .bullet-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .bullet-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .bullet-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        .bullet-list strong {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Progress Indicator -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <div class="logo-dot"></div>
+            PULSE
+        </div>
+        <div class="slide-counter" id="slideCounter">01 / 05</div>
+    </header>
+
+    <!-- Slides Viewport -->
+    <div class="slides-viewport">
+
+        <!-- Slide 1: Title -->
+        <div class="slide active" id="slide1">
+            <div class="slide-subtitle">Research Project Presentation</div>
+            <h1>In-Play Match Reasoning<br><span style="background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Using Large Language Models</span></h1>
+            <p style="font-size: 1.25rem; color: var(--text-secondary); max-width: 800px; line-height: 1.6;">
+                Evaluating whether modern LLMs can manifest context-aware, dynamic situational reasoning when analyzing evolving football match states frozen in real-time.
+            </p>
+            <div class="badge-container">
+                <div class="badge"><div class="badge-dot" style="background-color: var(--accent-blue);"></div>Qwen3.6-27B</div>
+                <div class="badge"><div class="badge-dot" style="background-color: var(--accent-purple);"></div>Gemma-4-31B</div>
+                <div class="badge"><div class="badge-dot" style="background-color: var(--accent-green);"></div>StatsBomb Open Data</div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Methodology -->
+        <div class="slide" id="slide2">
+            <div class="slide-subtitle">02 / Methodology</div>
+            <h2>Evaluation Pipeline Design</h2>
+            <p style="color: var(--text-secondary); font-size: 1.05rem;">
+                A strict, modular architecture designed to evaluate live reasoning and prevent any future information leakage.
+            </p>
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-title">
+                        <span class="card-number">1</span> Data Slicing
+                    </div>
+                    <div class="card-desc">
+                        Standardizes raw StatsBomb World Cup 2022 timelines. Truncates match events chronologically at precisely <strong>T = 20', 45', and 70'</strong> to isolate current game state.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <span class="card-number">2</span> Zero-Leakage Agent
+                    </div>
+                    <div class="card-desc">
+                        Recalculates scores using strictly historical events (&le; T). Formats timelines and queries models at <strong>Temp = 0</strong> for structured JSON completions.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <span class="card-number">3</span> Deterministic Grader
+                    </div>
+                    <div class="card-desc">
+                        An automated rules-based engine checks predictions against actual match remaining events. Penalizes vague responses or hedging (is_gradable = 0).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Results -->
+        <div class="slide" id="slide3">
+            <div class="slide-subtitle">03 / Results</div>
+            <h2>Information Scaling & Win Accuracy</h2>
+            <div class="grid-2">
+                <div class="card" style="padding: 1rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Freeze Minute</th>
+                                <th>Qwen-27B Accuracy</th>
+                                <th>Gemma-31B Accuracy</th>
+                                <th>Naive Baseline</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>**20th Minute**</td>
+                                <td class="highlight-col">40.0%</td>
+                                <td class="highlight-purple" style="color: var(--accent-purple); font-weight:600;">40.0%</td>
+                                <td>40.0%</td>
+                            </tr>
+                            <tr>
+                                <td>**45th Minute**</td>
+                                <td class="highlight-col">40.0%</td>
+                                <td class="highlight-purple" style="color: var(--accent-purple); font-weight:600;">40.0%</td>
+                                <td>60.0%</td>
+                            </tr>
+                            <tr>
+                                <td>**70th Minute**</td>
+                                <td class="highlight-col" style="font-size:1.1rem;">80.0%</td>
+                                <td class="highlight-purple" style="color: var(--accent-purple); font-weight:800; font-size:1.1rem;">80.0%</td>
+                                <td style="font-weight: 600;">100.0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <ul class="bullet-list">
+                        <li><strong>Information Scaling Confirmed</strong>: Both models show a massive rise in accuracy (from <strong>40% to 80%</strong>) as more match context becomes available.</li>
+                        <li><strong>Baseline Comparison</strong>: By minute 70, holding the lead is a strong statistical baseline (100% correct on this set). Models adapt to match this high-confidence trend.</li>
+                        <li><strong>Micro-Predictions</strong>: granular predictions (next goal/next clear chance) reached up to <strong>80.0% accuracy</strong>.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Calibration & Update Sensitivity -->
+        <div class="slide" id="slide4">
+            <div class="slide-subtitle">04 / Calibration & Adaptability</div>
+            <h2>How Well Do Models Know What They Know?</h2>
+            <p style="color: var(--text-secondary); font-size: 1.05rem;">
+                Evaluating prediction confidence calibration and sensitivity to game-changing events.
+            </p>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title" style="color: var(--accent-green);">
+                        Confidence Calibration
+                    </div>
+                    <div class="card-desc">
+                        <ul class="bullet-list" style="margin-top: 0.5rem;">
+                            <li><strong>Gemma-31B Excellence</strong>: Shows robust high-confidence calibration, reaching <strong>75.0% accuracy</strong> when stating 70-100% confidence.</li>
+                            <li><strong>Overconfidence Control</strong>: Low-to-medium confidence bins correctly yield lower accuracies, proving self-awareness.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--accent-purple);">
+                        Update Test (Sensitivity)
+                    </div>
+                    <div class="card-desc">
+                        <ul class="bullet-list" style="margin-top: 0.5rem;">
+                            <li><strong>Qwen-27B Perfection</strong>: Achieved <strong>100% consistency ratio</strong>, shifting its win probability vector in the correct direction on every single goal/red card.</li>
+                            <li><strong>Gemma-31B Consistency</strong>: Logged a strong <strong>80% consistency ratio</strong> across match transitions.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Takeaways -->
+        <div class="slide" id="slide5">
+            <div class="slide-subtitle">05 / Takeaways</div>
+            <h2>Conclusions & Future Horizons</h2>
+            <div class="grid-2">
+                <div>
+                    <ul class="bullet-list" style="gap: 1.25rem;">
+                        <li><strong>Contextual Reasoning</strong>: Models successfully synthesize momentum, cards, and substitutions, going beyond pure statistical scorelines.</li>
+                        <li><strong>Complementary Capabilities</strong>: <strong>Qwen</strong> is highly sensitive to live events (100% reactivity), while <strong>Gemma</strong> is better calibrated in its final assertions.</li>
+                        <li><strong>Practical Value</strong>: Proves LLMs can act as real-time sports analysts or risk engines.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--accent-blue);">
+                        Future Work
+                    </div>
+                    <ul class="bullet-list" style="margin-top: 0.5rem; gap: 0.5rem;">
+                        <li><strong>Consensus Multi-Agent Systems</strong> (cooperation of Qwen + Gemma).</li>
+                        <li>Integrating <strong>multimodal inputs</strong> (visual broadcasts).</li>
+                        <li>Testing on <strong>larger datasets</strong> (1000+ matches).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Controls -->
+    <footer>
+        <div class="instruction-tag">
+            <span>Use <kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd> arrows or buttons to navigate</span>
+        </div>
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="navigate(-1)">←</button>
+            <button class="btn" id="nextBtn" onclick="navigate(1)">→</button>
+        </div>
+    </footer>
+
+    <!-- Presentation Logic -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const counter = document.getElementById('slideCounter');
+        const progress = document.getElementById('progressBar');
+        let currentSlide = 0;
+
+        function updateSlide() {
+            slides.forEach((slide, idx) => {
+                if (idx === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+
+            // Update Counter
+            counter.innerText = `0${currentSlide + 1} / 0${slides.length}`;
+
+            // Update Progress Bar
+            const percent = ((currentSlide + 1) / slides.length) * 100;
+            progress.style.width = `${percent}%`;
+        }
+
+        function navigate(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) {
+                currentSlide = 0;
+            } else if (currentSlide >= slides.length) {
+                currentSlide = slides.length - 1;
+            }
+            updateSlide();
+        }
+
+        // Keyboard Arrow Controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                navigate(-1);
+            }
+        });
+    </script>
+</body>
+</html>
