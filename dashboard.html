@@ -1,0 +1,3145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse: In-Play Match Reasoning Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-blue: #2563eb;
+            --accent-purple: #7c3aed;
+            --accent-green: #059669;
+            --accent-red: #dc2626;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.03);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: 320px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 1.75rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+        }
+
+        .logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.05rem;
+            background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .match-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .match-item {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .match-item:hover {
+            border-color: var(--accent-blue);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+
+        .match-item.active {
+            background-color: rgba(37, 99, 235, 0.04);
+            border-color: var(--accent-blue);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .match-item-teams {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .match-item-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Main content area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .dashboard-header {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .match-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+        }
+
+        /* Minute Control Tabs */
+        .minute-selector {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 0.3rem;
+            gap: 0.25rem;
+        }
+
+        .minute-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.5rem 1.25rem;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .minute-btn.active {
+            background: #ffffff;
+            color: var(--accent-blue);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Dashboard Body Layout */
+        .dashboard-body {
+            flex-grow: 1;
+            padding: 2.5rem;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1.1fr 1.9fr;
+            gap: 2rem;
+        }
+
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Widgets/Cards styling */
+        .widget-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .widget-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Scoreboard styling */
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+        }
+
+        .score-team {
+            width: 40%;
+        }
+
+        .team-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .score-display {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1.5rem;
+            border-radius: 12px;
+            letter-spacing: 0.1rem;
+        }
+
+        /* Timeline styling */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 1.25rem;
+            top: 0.5rem;
+            bottom: 0.5rem;
+            width: 2px;
+            background-color: var(--border-color);
+        }
+
+        .timeline-event {
+            display: flex;
+            align-items: flex-start;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 0.25rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 2px var(--border-color);
+            z-index: 1;
+        }
+
+        .timeline-dot.goal {
+            background-color: var(--accent-green);
+        }
+
+        .timeline-dot.card {
+            background-color: #eab308;
+        }
+
+        .event-time {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            min-width: 40px;
+        }
+
+        .event-desc {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        /* Model Comparison Columns */
+        .arena-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .model-col-header {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .model-qwen {
+            color: var(--accent-blue);
+        }
+
+        .model-gemma {
+            color: var(--accent-purple);
+        }
+
+        .read-box {
+            background-color: #f8fafc;
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            min-height: 100px;
+        }
+
+        .gemma-read {
+            border-left-color: var(--accent-purple);
+        }
+
+        /* Prediction Bar styling */
+        .metric-row {
+            margin-bottom: 1rem;
+        }
+
+        .metric-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .metric-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .metric-val {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+        }
+
+        .bar-outer {
+            width: 100%;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-inner {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        .qwen-bar {
+            background-color: var(--accent-blue);
+        }
+
+        .gemma-bar {
+            background-color: var(--accent-purple);
+        }
+
+        /* Grading Badge */
+        .grade-card {
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .grade-card.correct {
+            background-color: rgba(5, 150, 105, 0.08);
+            border: 1px solid rgba(5, 150, 105, 0.2);
+            color: var(--accent-green);
+        }
+
+        .grade-card.incorrect {
+            background-color: rgba(220, 38, 38, 0.08);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            color: var(--accent-red);
+        }
+
+        /* What Happened Next Widget */
+        .future-badge-container {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .future-badge {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-timeline {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar: Match Selector -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-dot"></div>
+            <div class="logo-text">PULSE ARENA</div>
+        </div>
+        <div class="match-list" id="matchList">
+            <!-- Matches will be populated by JS -->
+        </div>
+    </div>
+
+    <!-- Main Dashboard Viewport -->
+    <div class="main-content">
+        <!-- Header: Match and Minute Controller -->
+        <div class="dashboard-header">
+            <div class="match-title" id="activeMatchTitle">Select a Match</div>
+            <div class="minute-selector">
+                <button class="minute-btn active" onclick="setMinute(20)">20'</button>
+                <button class="minute-btn" onclick="setMinute(45)">45'</button>
+                <button class="minute-btn" onclick="setMinute(70)">70'</button>
+            </div>
+        </div>
+
+        <!-- Scrollable Dashboard Body -->
+        <div class="dashboard-body">
+            
+            <!-- Left Column: Match State & Timeline -->
+            <div class="left-col">
+                <!-- Scoreboard Widget -->
+                <div class="widget-card">
+                    <div class="widget-title">Live Scoreboard</div>
+                    <div class="scoreboard">
+                        <div class="score-team">
+                            <div class="team-name" id="homeTeamName">-</div>
+                        </div>
+                        <div class="score-display" id="liveScore">0 - 0</div>
+                        <div class="score-team">
+                            <div class="team-name" id="awayTeamName">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events So Far Timeline Widget -->
+                <div class="widget-card" style="flex-grow: 1; display: flex; flex-direction: column;">
+                    <div class="widget-title" id="timelineTitle">Timeline (Up to 20')</div>
+                    <div style="flex-grow: 1; overflow-y: auto;">
+                        <div class="timeline" id="eventsTimeline">
+                            <!-- Events will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Model predictions Side-by-Side -->
+            <div class="right-col">
+                <!-- Model Battle Arena -->
+                <div class="arena-grid">
+                    
+                    <!-- Qwen Column -->
+                    <div>
+                        <div class="model-col-header model-qwen">
+                            Qwen3.6-27B
+                        </div>
+                        <div class="widget-card">
+                            <div class="read-box" id="qwenRead">
+                                No read loaded.
+                            </div>
+                            
+                            <!-- Next Goal -->
+                            <div class="metric-row">
+                                <div class="metric-meta">
+                                    <span class="metric-name">Next Goal Prediction</span>
+                                    <span class="metric-val" id="qwenNextGoalVal">-</span>
+                                </div>
+                                <div class="bar-outer">
+                                    <div class="bar-inner qwen-bar" id="qwenNextGoalBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Next Chance -->
+                            <div class="metric-row">
+                                <div class="metric-meta">
+                                    <span class="metric-name">Next Chance Prediction</span>
+                                    <span class="metric-val" id="qwenNextChanceVal">-</span>
+                                </div>
+                                <div class="bar-outer">
+                                    <div class="bar-inner qwen-bar" id="qwenNextChanceBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Final Result -->
+                            <div class="metric-row">
+                                <div class="metric-meta">
+                                    <span class="metric-name">Final Result prediction</span>
+                                    <span class="metric-val" id="qwenFinalResultVal">-</span>
+                                </div>
+                                <div class="bar-outer">
+                                    <div class="bar-inner qwen-bar" id="qwenFinalResultBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Grader Status -->
+                            <div class="grade-card" id="qwenGradeCard">
+                                <span>Outcome status</span>
+                                <span id="qwenGradeVal">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gemma Column -->
+                    <div>
+                        <div class="model-col-header model-gemma">
+                            Gemma-4-31B
+                        </div>
+                        <div class="widget-card">
+                            <div class="read-box gemma-read" id="gemmaRead">
+                                No read loaded.
+                            </div>
+                            
+                            <!-- Next Goal -->
+                            <div class="metric-row">
+                                <div class="metric-meta">
+                                    <span class="metric-name">Next Goal Prediction</span>
+                                    <span class="metric-val" id="gemmaNextGoalVal">-</span>
+                                </div>
+                                <div class="bar-outer">
+                                    <div class="bar-inner gemma-bar" id="gemmaNextGoalBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Next Chance -->
+                            <div class="metric-row">
+                                <div class="metric-meta">
+                                    <span class="metric-name">Next Chance Prediction</span>
+                                    <span class="metric-val" id="gemmaNextChanceVal">-</span>
+                                </div>
+                                <div class="bar-outer">
+                                    <div class="bar-inner gemma-bar" id="gemmaNextChanceBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Final Result -->
+                            <div class="metric-row">
+                                <div class="metric-meta">
+                                    <span class="metric-name">Final Result prediction</span>
+                                    <span class="metric-val" id="gemmaFinalResultVal">-</span>
+                                </div>
+                                <div class="bar-outer">
+                                    <div class="bar-inner gemma-bar" id="gemmaFinalResultBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Grader Status -->
+                            <div class="grade-card" id="gemmaGradeCard">
+                                <span>Outcome status</span>
+                                <span id="gemmaGradeVal">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- What Happened Next Widget -->
+                <div class="widget-card">
+                    <div class="widget-title">What Happened Next? (Remaining Match Events)</div>
+                    <div id="futureEventsBox">
+                        <!-- Future events will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Pre-embedded JSON match data -->
+    <script>
+        const MATCHES_DATA = [
+    {
+        "match_id": 3857255,
+        "home_team": "Japan",
+        "away_team": "Spain",
+        "events": [
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Japan",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Spain",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 6,
+                "second": 3,
+                "team": "Spain",
+                "player": "Sergio Busquets i Burgos",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 7,
+                "second": 12,
+                "team": "Japan",
+                "player": "Junya Ito",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 8,
+                "second": 52,
+                "team": "Spain",
+                "player": "Álvaro Borja Morata Martín",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 11,
+                "second": 0,
+                "team": "Spain",
+                "player": "Álvaro Borja Morata Martín",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 22,
+                "second": 34,
+                "team": "Spain",
+                "player": "Álvaro Borja Morata Martín",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 35,
+                "second": 50,
+                "team": "Japan",
+                "player": "Daichi Kamada",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 38,
+                "second": 24,
+                "team": "Japan",
+                "player": "Ko Itakura",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 41,
+                "second": 54,
+                "team": "Spain",
+                "player": "Daniel Olmo Carvajal",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 43,
+                "second": 31,
+                "team": "Japan",
+                "player": "Shogo Taniguchi",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 44,
+                "second": 20,
+                "team": "Japan",
+                "player": "Maya Yoshida",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Spain",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Japan",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Japan",
+                "player": "Takefusa Kubo",
+                "type": "Substitution",
+                "details": "Replaced by: Ritsu Doan"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Spain",
+                "player": "César Azpilicueta Tanco",
+                "type": "Substitution",
+                "details": "Replaced by: Daniel Carvajal Ramos"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Japan",
+                "player": "Yuto Nagatomo",
+                "type": "Substitution",
+                "details": "Replaced by: Kaoru Mitoma"
+            },
+            {
+                "minute": 46,
+                "second": 15,
+                "team": "Spain",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 46,
+                "second": 15,
+                "team": "Japan",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 47,
+                "second": 48,
+                "team": "Japan",
+                "player": "Ritsu Doan",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 50,
+                "second": 14,
+                "team": "Japan",
+                "player": "Ao Tanaka",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 56,
+                "second": 6,
+                "team": "Spain",
+                "player": "Nicholas Williams Arthuer",
+                "type": "Substitution",
+                "details": "Replaced by: Ferrán Torres García"
+            },
+            {
+                "minute": 56,
+                "second": 17,
+                "team": "Spain",
+                "player": "Álvaro Borja Morata Martín",
+                "type": "Substitution",
+                "details": "Replaced by: Marco Asensio Willemsen"
+            },
+            {
+                "minute": 61,
+                "second": 2,
+                "team": "Japan",
+                "player": "Daizen Maeda",
+                "type": "Substitution",
+                "details": "Replaced by: Takuma Asano"
+            },
+            {
+                "minute": 67,
+                "second": 13,
+                "team": "Spain",
+                "player": "Pablo Martín Páez Gavira",
+                "type": "Substitution",
+                "details": "Replaced by: Anssumane Fati"
+            },
+            {
+                "minute": 68,
+                "second": 49,
+                "team": "Japan",
+                "player": "Daichi Kamada",
+                "type": "Substitution",
+                "details": "Replaced by: Takehiro Tomiyasu"
+            },
+            {
+                "minute": 68,
+                "second": 54,
+                "team": "Spain",
+                "player": "Alejandro Balde Martínez",
+                "type": "Substitution",
+                "details": "Replaced by: Jordi Alba Ramos"
+            },
+            {
+                "minute": 69,
+                "second": 50,
+                "team": "Japan",
+                "player": "Takuma Asano",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 73,
+                "second": 12,
+                "team": "Spain",
+                "player": "Marco Asensio Willemsen",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 79,
+                "second": 18,
+                "team": "Spain",
+                "player": "Daniel Olmo Carvajal",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 82,
+                "second": 21,
+                "team": "Japan",
+                "player": "Ko Itakura",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 84,
+                "second": 30,
+                "team": "Spain",
+                "player": "Marco Asensio Willemsen",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 86,
+                "second": 30,
+                "team": "Japan",
+                "player": "Ao Tanaka",
+                "type": "Substitution",
+                "details": "Replaced by: Wataru Endo"
+            },
+            {
+                "minute": 88,
+                "second": 28,
+                "team": "Spain",
+                "player": "Jordi Alba Ramos",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 88,
+                "second": 49,
+                "team": "Spain",
+                "player": "Marco Asensio Willemsen",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 89,
+                "second": 8,
+                "team": "Spain",
+                "player": "Daniel Olmo Carvajal",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 95,
+                "second": 29,
+                "team": "Spain",
+                "player": "Daniel Olmo Carvajal",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 97,
+                "second": 1,
+                "team": "Japan",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 97,
+                "second": 1,
+                "team": "Spain",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            }
+        ],
+        "predictions": {
+            "20": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Spain has started brightly, creating multiple chances in the opening 10 minutes before Morata converted in the 11th minute. Japan attempted a response with a shot by Ito but lacked accuracy. Spain is currently dictating the tempo and looks the more clinical side. Japan will need to increase their intensity and risk to find an equalizer, which may leave them vulnerable to further Spanish attacks.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.75,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.65,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "away",
+                            "final_score": "2-1"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "[MOCK FALLBACK due to API error: Agent loop failed for match 3857255: ValueError: I] MOCK: Japan vs Spain. Score 0-1.",
+                        "next_goal": "no_more_goals",
+                        "next_goal_confidence": 0.61,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.48,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.88,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "away",
+                            "final_score": "2-1"
+                        }
+                    }
+                }
+            },
+            "45": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "[MOCK FALLBACK due to API error: Agent loop failed for match 3857255: JSONDecodeErr] MOCK: Japan vs Spain. Score 0-1.",
+                        "next_goal": "no_more_goals",
+                        "next_goal_confidence": 0.52,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.44,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.89,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "home",
+                            "final_score": "2-1"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "[MOCK FALLBACK due to API error: Agent loop failed for match 3857255: ValueError: I] MOCK: Japan vs Spain. Score 0-1.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.92,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.52,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.89,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "home",
+                            "final_score": "2-1"
+                        }
+                    }
+                }
+            },
+            "70": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Japan seized control with two rapid second-half goals to take a 2-1 lead. Spain has responded by injecting fresh attacking talent (Fati, Asensio, Ferran, Alba) to chase the game, while Japan has transitioned to a more defensive setup with Tomiyasu's introduction. Japan's three yellow cards require careful management, but their compact defensive shape and effective counter-attacking structure have neutralized Spain's early second-half pressure. With 20 minutes remaining, Spain will likely dominate possession and territory, but Japan's organization and threat on the break make a late collapse unlikely.",
+                        "next_goal": "no_more_goals",
+                        "next_goal_confidence": 0.58,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.68,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.62,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "home_win",
+                            "next_clear_chance": "away",
+                            "final_score": "2-1"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "[MOCK FALLBACK due to API error: Agent loop failed for match 3857255: ValueError: I] MOCK: Japan vs Spain. Score 2-1.",
+                        "next_goal": "no_more_goals",
+                        "next_goal_confidence": 0.68,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.33,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.85,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "home_win",
+                            "next_clear_chance": "away",
+                            "final_score": "2-1"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "match_id": 3857271,
+        "home_team": "England",
+        "away_team": "Iran",
+        "events": [
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Iran",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "England",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 7,
+                "second": 15,
+                "team": "England",
+                "player": "Harry Maguire",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 19,
+                "second": 12,
+                "team": "Iran",
+                "player": "Alireza Safar Beiranvand",
+                "type": "Substitution",
+                "details": "Replaced by: Seyed Hossein Hosseini"
+            },
+            {
+                "minute": 24,
+                "second": 19,
+                "team": "Iran",
+                "player": "Alireza Jahanbakhsh",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 26,
+                "second": 58,
+                "team": "England",
+                "player": "Bukayo Saka",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 29,
+                "second": 8,
+                "team": "England",
+                "player": "Mason Mount",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 31,
+                "second": 47,
+                "team": "England",
+                "player": "Harry Maguire",
+                "type": "Shot",
+                "details": "Shot outcome: Post"
+            },
+            {
+                "minute": 34,
+                "second": 9,
+                "team": "England",
+                "player": "Jude Bellingham",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 42,
+                "second": 46,
+                "team": "England",
+                "player": "Bukayo Saka",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Iran",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "England",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Iran",
+                "player": "Ali Karimi",
+                "type": "Substitution",
+                "details": "Replaced by: Saeid Ezatolahi Afagh"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Iran",
+                "player": "Alireza Jahanbakhsh",
+                "type": "Substitution",
+                "details": "Replaced by: Ali Gholizadeh"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Iran",
+                "player": "Roozbeh Cheshmi",
+                "type": "Substitution",
+                "details": "Replaced by: Mohammad Hossein Kanani Zadegan"
+            },
+            {
+                "minute": 45,
+                "second": 17,
+                "team": "England",
+                "player": "Raheem Sterling",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 47,
+                "second": 47,
+                "team": "Iran",
+                "player": "Morteza Pouraliganji",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 50,
+                "second": 11,
+                "team": "England",
+                "player": "Kieran Trippier",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 55,
+                "second": 4,
+                "team": "Iran",
+                "player": "Alireza Jahanbakhsh",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 58,
+                "second": 56,
+                "team": "England",
+                "player": "Luke Shaw",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 59,
+                "second": 3,
+                "team": "England",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 59,
+                "second": 3,
+                "team": "Iran",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 60,
+                "second": 16,
+                "team": "Iran",
+                "player": "Saeid Ezatolahi Afagh",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 61,
+                "second": 26,
+                "team": "England",
+                "player": "Bukayo Saka",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 62,
+                "second": 50,
+                "team": "Iran",
+                "player": "Milad Mohammadi",
+                "type": "Substitution",
+                "details": "Replaced by: Mehdi Torabi"
+            },
+            {
+                "minute": 64,
+                "second": 33,
+                "team": "Iran",
+                "player": "Mehdi Taremi",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 69,
+                "second": 3,
+                "team": "Iran",
+                "player": "Mehdi Torabi",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 69,
+                "second": 5,
+                "team": "Iran",
+                "player": "Ahmad Nourollahi",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 70,
+                "second": 27,
+                "team": "England",
+                "player": "Raheem Sterling",
+                "type": "Substitution",
+                "details": "Replaced by: Jack Grealish"
+            },
+            {
+                "minute": 70,
+                "second": 27,
+                "team": "England",
+                "player": "Bukayo Saka",
+                "type": "Substitution",
+                "details": "Replaced by: Marcus Rashford"
+            },
+            {
+                "minute": 70,
+                "second": 28,
+                "team": "England",
+                "player": "Harry Maguire",
+                "type": "Substitution",
+                "details": "Replaced by: Eric Dier"
+            },
+            {
+                "minute": 70,
+                "second": 28,
+                "team": "England",
+                "player": "Mason Mount",
+                "type": "Substitution",
+                "details": "Replaced by: Phil Foden"
+            },
+            {
+                "minute": 70,
+                "second": 51,
+                "team": "England",
+                "player": "Marcus Rashford",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 75,
+                "second": 10,
+                "team": "England",
+                "player": "Harry Kane",
+                "type": "Substitution",
+                "details": "Replaced by: Callum Wilson"
+            },
+            {
+                "minute": 76,
+                "second": 20,
+                "team": "Iran",
+                "player": "Mehdi Taremi",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 76,
+                "second": 42,
+                "team": "Iran",
+                "player": "Ahmad Nourollahi",
+                "type": "Substitution",
+                "details": "Replaced by: Sardar Azmoun"
+            },
+            {
+                "minute": 83,
+                "second": 5,
+                "team": "England",
+                "player": "Marcus Rashford",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 89,
+                "second": 1,
+                "team": "England",
+                "player": "Jack Grealish",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 97,
+                "second": 41,
+                "team": "Iran",
+                "player": "Sardar Azmoun",
+                "type": "Shot",
+                "details": "Shot outcome: Saved to Post"
+            },
+            {
+                "minute": 102,
+                "second": 30,
+                "team": "Iran",
+                "player": "Mehdi Taremi",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 103,
+                "second": 5,
+                "team": "England",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 103,
+                "second": 5,
+                "team": "Iran",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            }
+        ],
+        "predictions": {
+            "20": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "England has started with intent, registering an early shot, while Iran has been forced into a significant disruption by substituting their starting goalkeeper, Beiranvand, for Hosseini in the 19th minute. This early change likely indicates an injury and introduces uncertainty into the Iranian defense. England appears to be the more settled side and is well-positioned to exploit the disarray caused by the goalkeeper switch.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.75,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "home",
+                            "final_score": "6-2"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "England is controlling possession and territory, though they have struggled to penetrate Iran's low block, as evidenced by Maguire's early off-target effort. Iran is playing a defensive, reactive game. A critical early event is the forced substitution of Iran's starting goalkeeper Beiranvand at the 19th minute, which may disrupt their defensive organization and confidence.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.85,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.7,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "home",
+                            "final_score": "6-2"
+                        }
+                    }
+                }
+            },
+            "45": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "England is thoroughly dominating the match, controlling possession and creating multiple high-quality chances. They have been clinical, converting opportunities into three goals from Bellingham, Saka, and Sterling to lead 3-0. Iran is struggling significantly, forced to make an early substitution and now three changes at the break to try and arrest the crisis. England's attack is fluid and relentless, while Iran appears disorganized and vulnerable. The momentum is heavily with the home side.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.85,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.95,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.8,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "home",
+                            "final_score": "6-2"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "England is completely dominating the match, scoring three goals in a rapid burst just before and after the halftime whistle. Iran is struggling defensively and has already made several substitutions to try and stem the tide. England's offensive pressure is relentless, while Iran has failed to register a significant threat.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.75,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.99,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.8,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "home",
+                            "final_score": "6-2"
+                        }
+                    }
+                }
+            },
+            "70": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "England has completely dominated the match, showcasing clinical finishing and tactical superiority to build a commanding 5-1 lead. Iran has attempted to respond with multiple substitutions, but England's fresh attacking reinforcements (Rashford, Foden, Grealish) have immediately impacted the game, with Rashford scoring shortly after his introduction. With 20 minutes remaining, England controls the tempo and possession, while Iran is likely to focus on damage limitation and defensive stability.",
+                        "next_goal": "no_more_goals",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.99,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.75,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "away",
+                            "final_score": "6-2"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "England is completely dominating the match, leading 5-1. While Iran had a brief moment of resurgence around the 64th minute with a goal and a few subsequent shots, England immediately responded with a goal from Rashford. England's tactical superiority and depth are evident, as they have made multiple attacking substitutions to maintain pressure and freshness. Iran is struggling to contain England's movement and lacks the clinical edge to threaten a comeback.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.99,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.7,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "home",
+                            "final_result": "home_win",
+                            "next_clear_chance": "away",
+                            "final_score": "6-2"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "match_id": 3857274,
+        "home_team": "Netherlands",
+        "away_team": "Ecuador",
+        "events": [
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Ecuador",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Netherlands",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 5,
+                "second": 3,
+                "team": "Netherlands",
+                "player": "Cody Mathès Gakpo",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 10,
+                "second": 39,
+                "team": "Ecuador",
+                "player": "Enner Remberto Valencia Lastra",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 23,
+                "second": 32,
+                "team": "Ecuador",
+                "player": "Moisés Isaac Caicedo Corozo",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 26,
+                "second": 56,
+                "team": "Ecuador",
+                "player": "Michael Steveen Estrada Martínez",
+                "type": "Shot",
+                "details": "Shot outcome: Wayward"
+            },
+            {
+                "minute": 31,
+                "second": 53,
+                "team": "Ecuador",
+                "player": "Enner Remberto Valencia Lastra",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Netherlands",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Ecuador",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Netherlands",
+                "player": "Steven Bergwijn",
+                "type": "Substitution",
+                "details": "Replaced by: Memphis Depay"
+            },
+            {
+                "minute": 46,
+                "second": 49,
+                "team": "Ecuador",
+                "player": "Enner Remberto Valencia Lastra",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 47,
+                "second": 48,
+                "team": "Ecuador",
+                "player": "Angelo Smit Preciado Quiñónez",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 47,
+                "second": 49,
+                "team": "Ecuador",
+                "player": "Pervis Josué Estupiñán Tenorio",
+                "type": "Shot",
+                "details": "Shot outcome: Wayward"
+            },
+            {
+                "minute": 48,
+                "second": 43,
+                "team": "Ecuador",
+                "player": "Pervis Josué Estupiñán Tenorio",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 48,
+                "second": 44,
+                "team": "Ecuador",
+                "player": "Enner Remberto Valencia Lastra",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 48,
+                "second": 59,
+                "team": "Ecuador",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 48,
+                "second": 59,
+                "team": "Netherlands",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 56,
+                "second": 13,
+                "team": "Ecuador",
+                "player": "Jhegson Sebastián Méndez Carabalí",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 58,
+                "second": 46,
+                "team": "Ecuador",
+                "player": "Enner Remberto Valencia Lastra",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 58,
+                "second": 48,
+                "team": "Ecuador",
+                "player": "Gonzalo Jordy Plata Jiménez",
+                "type": "Shot",
+                "details": "Shot outcome: Post"
+            },
+            {
+                "minute": 63,
+                "second": 19,
+                "team": "Ecuador",
+                "player": "Michael Steveen Estrada Martínez",
+                "type": "Shot",
+                "details": "Shot outcome: Wayward"
+            },
+            {
+                "minute": 65,
+                "second": 12,
+                "team": "Netherlands",
+                "player": "Teun Koopmeiners",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 68,
+                "second": 56,
+                "team": "Netherlands",
+                "player": "Davy Klaassen",
+                "type": "Substitution",
+                "details": "Replaced by: Steven Berghuis"
+            },
+            {
+                "minute": 72,
+                "second": 33,
+                "team": "Ecuador",
+                "player": "Moisés Isaac Caicedo Corozo",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 73,
+                "second": 23,
+                "team": "Ecuador",
+                "player": "Michael Steveen Estrada Martínez",
+                "type": "Substitution",
+                "details": "Replaced by: Jeremy Leonel Sarmiento Morante"
+            },
+            {
+                "minute": 78,
+                "second": 56,
+                "team": "Netherlands",
+                "player": "Cody Mathès Gakpo",
+                "type": "Substitution",
+                "details": "Replaced by: Wout Weghorst"
+            },
+            {
+                "minute": 79,
+                "second": 2,
+                "team": "Netherlands",
+                "player": "Teun Koopmeiners",
+                "type": "Substitution",
+                "details": "Replaced by: Marten de Roon"
+            },
+            {
+                "minute": 80,
+                "second": 21,
+                "team": "Ecuador",
+                "player": "Angelo Smit Preciado Quiñónez",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 89,
+                "second": 2,
+                "team": "Ecuador",
+                "player": "Enner Remberto Valencia Lastra",
+                "type": "Substitution",
+                "details": "Replaced by: Kevin José Rodríguez Cortez"
+            },
+            {
+                "minute": 89,
+                "second": 9,
+                "team": "Ecuador",
+                "player": "Gonzalo Jordy Plata Jiménez",
+                "type": "Substitution",
+                "details": "Replaced by: Romario Andrés Ibarra Mina"
+            },
+            {
+                "minute": 91,
+                "second": 54,
+                "team": "Ecuador",
+                "player": "Angelo Smit Preciado Quiñónez",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 96,
+                "second": 8,
+                "team": "Ecuador",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 96,
+                "second": 8,
+                "team": "Netherlands",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            }
+        ],
+        "predictions": {
+            "20": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Netherlands established early dominance with a Cody Gakpo goal in the 5th minute, allowing them to control the tempo. Ecuador's response has been limited to a blocked shot by Valencia in the 11th minute, suggesting the Dutch defense is well-organized. With a 1-0 lead at the 20-minute mark, the Netherlands are in a strong position to manage the game, while Ecuador may be forced to open up, potentially exposing themselves to further Dutch attacks.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.8,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "away",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "1-1"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "Netherlands started aggressively, securing an early lead through Gakpo. Ecuador has shown limited resistance with only one blocked shot, while the Dutch maintain control of the tempo and possession. The momentum heavily favors the home side, who are comfortably managing the game state.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.85,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.7,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "away",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "1-1"
+                        }
+                    }
+                }
+            },
+            "45": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Netherlands established an early advantage with a Gakpo goal in the 5th minute and have effectively managed the game state. Ecuador has shown resilience and attacking intent, generating four shots in the first half, but the Netherlands defense has been robust, neutralizing threats from Valencia and Caicedo. The immediate substitution of Memphis Depay for Bergwijn at the start of the second half indicates a tactical shift to add creativity and exploit the spaces Ecuador must leave open to chase the game. Netherlands are in a strong position to control the remainder of the match, while Ecuador needs to find a breakthrough quickly.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.62,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.78,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.58,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "away",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "1-1"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "Netherlands lead 1-0 thanks to an early Gakpo goal. While Ecuador has been more active in terms of shot volume, most of their attempts have been blocked or saved, suggesting a strong Dutch defensive structure. The introduction of Memphis Depay at halftime indicates a tactical shift to increase creativity and clinical finishing in the final third. Netherlands are controlling the tempo, while Ecuador is struggling to convert pressure into high-quality chances.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.8,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "away",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "1-1"
+                        }
+                    }
+                }
+            },
+            "70": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Ecuador has completely dominated the second half, creating a flurry of chances immediately after the break to equalize through Valencia. They are pressing aggressively, taking numerous shots, and controlling the tempo. Netherlands responded with attacking substitutions (Depay, Berghuis) but have struggled to create clear opportunities, managing only one off-target shot since the restart. With 20 minutes remaining, Ecuador's momentum, high shot volume, and tactical cohesion make them the more dangerous side, while the Dutch attack appears disjointed and potentially vulnerable to counter-attacks.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.58,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.72,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "1-1"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "Ecuador has been the dominant force for the majority of the match, creating significantly more chances and putting the Netherlands under immense pressure, especially at the start of the second half. The Netherlands scored early but have struggled to maintain control, with Ecuador hitting the post and forcing several saves. The Dutch substitution of Berghuis suggests a desire to increase creative output to break the deadlock, but Ecuador's momentum and efficiency in transition remain the primary threat.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.55,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.45,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "1-1"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "match_id": 3857276,
+        "home_team": "Canada",
+        "away_team": "Morocco",
+        "events": [
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Morocco",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Canada",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 2,
+                "second": 5,
+                "team": "Canada",
+                "player": "Mark Anthony Kaye",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 3,
+                "second": 29,
+                "team": "Morocco",
+                "player": "Hakim Ziyech",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 6,
+                "second": 43,
+                "team": "Canada",
+                "player": "David Junior Hoilett",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 8,
+                "second": 18,
+                "team": "Morocco",
+                "player": "Abdelhamid Sabiri",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 9,
+                "second": 9,
+                "team": "Morocco",
+                "player": "Sofiane Boufal",
+                "type": "Shot",
+                "details": "Shot outcome: Wayward"
+            },
+            {
+                "minute": 14,
+                "second": 7,
+                "team": "Canada",
+                "player": "Tajon Buchanan",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 15,
+                "second": 6,
+                "team": "Morocco",
+                "player": "Hakim Ziyech",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 22,
+                "second": 36,
+                "team": "Morocco",
+                "player": "Youssef En-Nesyri",
+                "type": "Goal",
+                "details": "Shot outcome: Goal"
+            },
+            {
+                "minute": 25,
+                "second": 39,
+                "team": "Canada",
+                "player": "Jonathan Osorio",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 32,
+                "second": 45,
+                "team": "Morocco",
+                "player": "Abdelhamid Sabiri",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Morocco",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Canada",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 46,
+                "second": 25,
+                "team": "Canada",
+                "player": "Sam Adekugbe",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 47,
+                "second": 18,
+                "team": "Morocco",
+                "player": "Youssef En-Nesyri",
+                "type": "Shot",
+                "details": "Shot outcome: Wayward"
+            },
+            {
+                "minute": 50,
+                "second": 5,
+                "team": "Morocco",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 50,
+                "second": 5,
+                "team": "Canada",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 57,
+                "second": 6,
+                "team": "Canada",
+                "player": "Alphonso Davies",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 59,
+                "second": 47,
+                "team": "Canada",
+                "player": "Cyle Larin",
+                "type": "Substitution",
+                "details": "Replaced by: Jonathan David"
+            },
+            {
+                "minute": 59,
+                "second": 51,
+                "team": "Canada",
+                "player": "Mark Anthony Kaye",
+                "type": "Substitution",
+                "details": "Replaced by: Atiba Hutchinson"
+            },
+            {
+                "minute": 60,
+                "second": 12,
+                "team": "Canada",
+                "player": "Sam Adekugbe",
+                "type": "Substitution",
+                "details": "Replaced by: Ismael Koné"
+            },
+            {
+                "minute": 64,
+                "second": 10,
+                "team": "Morocco",
+                "player": "Sofiane Boufal",
+                "type": "Substitution",
+                "details": "Replaced by: Zakaria Aboukhlal"
+            },
+            {
+                "minute": 64,
+                "second": 28,
+                "team": "Morocco",
+                "player": "Abdelhamid Sabiri",
+                "type": "Substitution",
+                "details": "Replaced by: Selim Amallah"
+            },
+            {
+                "minute": 65,
+                "second": 4,
+                "team": "Canada",
+                "player": "Jonathan Osorio",
+                "type": "Substitution",
+                "details": "Replaced by: Richie Laryea"
+            },
+            {
+                "minute": 70,
+                "second": 55,
+                "team": "Canada",
+                "player": "Atiba Hutchinson",
+                "type": "Shot",
+                "details": "Shot outcome: Post"
+            },
+            {
+                "minute": 70,
+                "second": 57,
+                "team": "Canada",
+                "player": "Alistair Johnston",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 75,
+                "second": 24,
+                "team": "Canada",
+                "player": "David Junior Hoilett",
+                "type": "Substitution",
+                "details": "Replaced by: David Wallace Wotherspoon"
+            },
+            {
+                "minute": 75,
+                "second": 36,
+                "team": "Morocco",
+                "player": "Hakim Ziyech",
+                "type": "Substitution",
+                "details": "Replaced by: Abderrazak Hamdallah"
+            },
+            {
+                "minute": 75,
+                "second": 48,
+                "team": "Morocco",
+                "player": "Azzedine Ounahi",
+                "type": "Substitution",
+                "details": "Replaced by: Jawad El Yamiq"
+            },
+            {
+                "minute": 83,
+                "second": 49,
+                "team": "Canada",
+                "player": "Steven de Sousa Vitoria",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 84,
+                "second": 55,
+                "team": "Morocco",
+                "player": "Achraf Hakimi Mouh",
+                "type": "Substitution",
+                "details": "Replaced by: Yahya Jabrane"
+            },
+            {
+                "minute": 93,
+                "second": 54,
+                "team": "Morocco",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 93,
+                "second": 54,
+                "team": "Canada",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            }
+        ],
+        "predictions": {
+            "20": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Morocco started brightly, capitalizing on early pressure to take a 1-0 lead through Hakim Ziyech in the 3rd minute. The visitors are maintaining control, registering multiple shots (Sabiri, Boufal, Ziyech) compared to Canada's blocked and off-target efforts. Canada is forced to chase the game, evidenced by Hoilett's early yellow card, which may leave them vulnerable to Moroccan counters. Morocco's superior quality and current momentum suggest they are the favorites to extend their lead or control the tempo.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.55,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.65,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "away",
+                            "final_result": "away_win",
+                            "next_clear_chance": "away",
+                            "final_score": "0-2"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "Morocco started aggressively and secured an early lead through Ziyech. They are currently controlling the tempo and creating more high-quality opportunities. Canada has attempted to respond but lacks precision, with their efforts being blocked or off-target. Morocco's technical superiority in midfield is evident, while Canada is struggling with discipline and cohesion early on.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.75,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "away",
+                            "final_result": "away_win",
+                            "next_clear_chance": "away",
+                            "final_score": "0-2"
+                        }
+                    }
+                }
+            },
+            "45": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Morocco is firmly in control, leading 2-0 at the half-time interval. They have been the sharper side, converting chances through Ziyech and En-Nesyri, while Canada has struggled to threaten, with their limited attempts being blocked or off-target. Canada has also picked up two early yellow cards, indicating frustration and a reactive approach. Morocco's attack is clicking, and they are likely to dictate the tempo in the second half.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.92,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.62,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "away_win",
+                            "next_clear_chance": "away",
+                            "final_score": "0-2"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "Morocco has completely dominated the first half, establishing a comfortable 2-0 lead through clinical finishing and superior control of the tempo. Canada has struggled to create high-quality chances, with their few attempts being blocked or off-target, and they are already carrying two yellow cards, which limits their defensive aggression. Morocco's attacking fluidity, led by Ziyech and En-Nesyri, is currently too strong for the Canadian backline.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.92,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.7,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "away_win",
+                            "next_clear_chance": "away",
+                            "final_score": "0-2"
+                        }
+                    }
+                }
+            },
+            "70": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Morocco controls the match comfortably with a 2-0 lead, having capitalized on early opportunities through Ziyech and En-Nesyri. Canada has struggled to penetrate the Moroccan backline, with the majority of their attempts going wide or blocked. Desperate attacking substitutions around the 60th minute have shifted Canada's shape, forcing them to commit more players forward. This urgency was immediately reflected by Hutchinson hitting the post just before the freeze. While Canada's increased pressure creates openings, it also leaves them exposed to counter-attacks. Morocco, now with fresh legs and a comfortable cushion, is likely to focus on defensive organization and game management.",
+                        "next_goal": "no_more_goals",
+                        "next_goal_confidence": 0.68,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.88,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.72,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "away_win",
+                            "next_clear_chance": null,
+                            "final_score": "0-2"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "Morocco has been dominant for the majority of the match, scoring two early goals and controlling the tempo. Canada has struggled with discipline, picking up three yellow cards, and has lacked clinical finishing. However, Canada has increased their aggression and pressure in the final 20 minutes, evidenced by recent substitutions and a shot hitting the post at the 70th minute. Morocco is likely to shift into a more conservative, game-management phase to protect their 2-0 lead.",
+                        "next_goal": "no_more_goals",
+                        "next_goal_confidence": 0.65,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.9,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 1,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "away_win",
+                            "next_clear_chance": null,
+                            "final_score": "0-2"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "match_id": 3857296,
+        "home_team": "Croatia",
+        "away_team": "Belgium",
+        "events": [
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Belgium",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 0,
+                "second": 0,
+                "team": "Croatia",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 0,
+                "second": 8,
+                "team": "Croatia",
+                "player": "Ivan Perišić",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 9,
+                "second": 7,
+                "team": "Belgium",
+                "player": "Yannick Ferreira Carrasco",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 10,
+                "second": 51,
+                "team": "Belgium",
+                "player": "Yannick Ferreira Carrasco",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 12,
+                "second": 56,
+                "team": "Belgium",
+                "player": "Dries Mertens",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 24,
+                "second": 50,
+                "team": "Belgium",
+                "player": "Axel Witsel",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 32,
+                "second": 19,
+                "team": "Croatia",
+                "player": "Marcelo Brozović",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 32,
+                "second": 28,
+                "team": "Croatia",
+                "player": "Marko Livaja",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 41,
+                "second": 14,
+                "team": "Belgium",
+                "player": "Dries Mertens",
+                "type": "Shot",
+                "details": "Shot outcome: Wayward"
+            },
+            {
+                "minute": 44,
+                "second": 42,
+                "team": "Croatia",
+                "player": "Borna Sosa",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Croatia",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Belgium",
+                "player": null,
+                "type": "Half Start",
+                "details": ""
+            },
+            {
+                "minute": 45,
+                "second": 0,
+                "team": "Belgium",
+                "player": "Dries Mertens",
+                "type": "Substitution",
+                "details": "Replaced by: Romelu Lukaku Menama"
+            },
+            {
+                "minute": 47,
+                "second": 54,
+                "team": "Belgium",
+                "player": "Yannick Ferreira Carrasco",
+                "type": "Shot",
+                "details": "Shot outcome: Wayward"
+            },
+            {
+                "minute": 48,
+                "second": 2,
+                "team": "Belgium",
+                "player": "Romelu Lukaku Menama",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 48,
+                "second": 47,
+                "team": "Croatia",
+                "player": "Ivan Perišić",
+                "type": "Shot",
+                "details": "Shot outcome: Wayward"
+            },
+            {
+                "minute": 48,
+                "second": 56,
+                "team": "Croatia",
+                "player": "Josip Juranović",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 49,
+                "second": 2,
+                "team": "Croatia",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 49,
+                "second": 2,
+                "team": "Belgium",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 49,
+                "second": 15,
+                "team": "Croatia",
+                "player": "Mateo Kovačić",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 49,
+                "second": 54,
+                "team": "Croatia",
+                "player": "Borna Sosa",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 50,
+                "second": 38,
+                "team": "Belgium",
+                "player": "Kevin De Bruyne",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 53,
+                "second": 8,
+                "team": "Croatia",
+                "player": "Marcelo Brozović",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 53,
+                "second": 42,
+                "team": "Croatia",
+                "player": "Luka Modrić",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 58,
+                "second": 5,
+                "team": "Belgium",
+                "player": "Leandro Trossard",
+                "type": "Substitution",
+                "details": "Replaced by: Thorgan Hazard"
+            },
+            {
+                "minute": 59,
+                "second": 47,
+                "team": "Belgium",
+                "player": "Yannick Ferreira Carrasco",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 59,
+                "second": 49,
+                "team": "Belgium",
+                "player": "Romelu Lukaku Menama",
+                "type": "Shot",
+                "details": "Shot outcome: Post"
+            },
+            {
+                "minute": 61,
+                "second": 50,
+                "team": "Belgium",
+                "player": "Romelu Lukaku Menama",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 63,
+                "second": 16,
+                "team": "Croatia",
+                "player": "Marko Livaja",
+                "type": "Substitution",
+                "details": "Replaced by: Bruno Petković"
+            },
+            {
+                "minute": 63,
+                "second": 42,
+                "team": "Croatia",
+                "player": "Andrej Kramarić",
+                "type": "Substitution",
+                "details": "Replaced by: Mario Pašalić"
+            },
+            {
+                "minute": 65,
+                "second": 56,
+                "team": "Belgium",
+                "player": "Leander Dendoncker",
+                "type": "Card",
+                "details": "Card type: Yellow Card"
+            },
+            {
+                "minute": 67,
+                "second": 9,
+                "team": "Croatia",
+                "player": "Luka Modrić",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 68,
+                "second": 11,
+                "team": "Belgium",
+                "player": "Kevin De Bruyne",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 71,
+                "second": 30,
+                "team": "Belgium",
+                "player": "Yannick Ferreira Carrasco",
+                "type": "Substitution",
+                "details": "Replaced by: Jeremy Doku"
+            },
+            {
+                "minute": 71,
+                "second": 37,
+                "team": "Belgium",
+                "player": "Leander Dendoncker",
+                "type": "Substitution",
+                "details": "Replaced by: Youri Tielemans"
+            },
+            {
+                "minute": 77,
+                "second": 41,
+                "team": "Belgium",
+                "player": "Jan Vertonghen",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 86,
+                "second": 9,
+                "team": "Belgium",
+                "player": "Thomas Meunier",
+                "type": "Shot",
+                "details": "Shot outcome: Blocked"
+            },
+            {
+                "minute": 86,
+                "second": 9,
+                "team": "Belgium",
+                "player": "Romelu Lukaku Menama",
+                "type": "Shot",
+                "details": "Shot outcome: Off T"
+            },
+            {
+                "minute": 86,
+                "second": 37,
+                "team": "Belgium",
+                "player": "Thomas Meunier",
+                "type": "Substitution",
+                "details": "Replaced by: Eden Hazard"
+            },
+            {
+                "minute": 89,
+                "second": 41,
+                "team": "Belgium",
+                "player": "Romelu Lukaku Menama",
+                "type": "Shot",
+                "details": "Shot outcome: Saved"
+            },
+            {
+                "minute": 90,
+                "second": 54,
+                "team": "Croatia",
+                "player": "Mateo Kovačić",
+                "type": "Substitution",
+                "details": "Replaced by: Lovro Majer"
+            },
+            {
+                "minute": 93,
+                "second": 59,
+                "team": "Belgium",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            },
+            {
+                "minute": 93,
+                "second": 59,
+                "team": "Croatia",
+                "player": null,
+                "type": "Half End",
+                "details": ""
+            }
+        ],
+        "predictions": {
+            "20": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "Belgium is asserting early dominance, registering three shots in a four-minute window (09:00-13:00) compared to Croatia's solitary effort. While Belgium's finishing has been poor so far (two blocked, one off-target), their sustained pressure and volume of attempts indicate they are controlling the attacking tempo. Croatia is absorbing pressure effectively, blocking shots and keeping the score level, but they have yet to generate a significant threat of their own. The momentum is clearly with the visitors.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.58,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.52,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.78,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "0-0"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "Belgium has established early territorial dominance and a higher volume of attempts, though they have struggled with clinical finishing and Croatian defensive blocks. Croatia is playing a more reactive game, relying on quick transitions as seen with Perišić's early effort. Belgium's pressure is consistent, but Croatia's structure remains intact.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.45,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.4,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "0-0"
+                        }
+                    }
+                }
+            },
+            "45": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "[MOCK FALLBACK due to API error: Agent loop failed for match 3857296: JSONDecodeErr] MOCK: Croatia vs Belgium. Score 0-0.",
+                        "next_goal": "home",
+                        "next_goal_confidence": 0.29,
+                        "final_result": "home_win",
+                        "final_result_confidence": 0.78,
+                        "next_clear_chance": "home",
+                        "next_clear_chance_confidence": 0.66,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 0,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "0-0"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "A tight first half characterized by high volume but low quality of chances. Belgium has been more active in the final third, particularly through Carrasco and Mertens, but has struggled to penetrate the Croatian defense. Croatia has remained disciplined, relying on counter-attacks and set pieces. The introduction of Romelu Lukaku at halftime is a significant tactical shift for Belgium, providing a focal point and physical presence in the box that was missing in the first half.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.55,
+                        "final_result": "away_win",
+                        "final_result_confidence": 0.6,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.65,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 0,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "0-0"
+                        }
+                    }
+                }
+            },
+            "70": {
+                "model_1": {
+                    "predictions": {
+                        "situational_read": "The match is a tightly contested, low-scoring affair defined by strong defensive organization and a lack of clinical finishing. Despite a high volume of attempts, most shots have been blocked, wayward, or well-saved. Belgium's introduction of Lukaku and Hazard has increased their attacking threat, culminating in a post strike and a saved De Bruyne effort, giving them slight late momentum. Croatia responded with attacking substitutions and are relying on Modrić's creativity and defensive resilience. With 20 minutes remaining, the deadlock is likely to hold, though Belgium's recent pressure makes them slight favorites to break it.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.52,
+                        "final_result": "draw",
+                        "final_result_confidence": 0.65,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.6,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "0-0"
+                        }
+                    }
+                },
+                "model_2": {
+                    "predictions": {
+                        "situational_read": "A tight, tactical stalemate with both teams creating chances but lacking clinical finishing. Belgium has had the slight edge in volume and quality, particularly since the introduction of Lukaku, who has already hit the post. Croatia remains dangerous through Modrić and Kovačić in transition. The game is currently balanced, but Belgium's superior individual quality in the final third makes them slightly more likely to break the deadlock as the game opens up.",
+                        "next_goal": "away",
+                        "next_goal_confidence": 0.45,
+                        "final_result": "draw",
+                        "final_result_confidence": 0.55,
+                        "next_clear_chance": "away",
+                        "next_clear_chance_confidence": 0.52,
+                        "is_gradable": true
+                    },
+                    "grades": {
+                        "is_gradable": true,
+                        "next_goal_grade": 0,
+                        "final_result_grade": 1,
+                        "next_clear_chance_grade": 1,
+                        "actual": {
+                            "next_goal": "no_more_goals",
+                            "final_result": "draw",
+                            "next_clear_chance": "away",
+                            "final_score": "0-0"
+                        }
+                    }
+                }
+            }
+        }
+    }
+];
+        
+        let activeMatchIdx = 0;
+        let activeMinute = 20;
+
+        function initDashboard() {
+            const listContainer = document.getElementById("matchList");
+            listContainer.innerHTML = "";
+            
+            MATCHES_DATA.forEach((match, idx) => {
+                const item = document.createElement("div");
+                item.className = `match-item ${idx === activeMatchIdx ? "active" : ""}`;
+                item.onclick = () => selectMatch(idx);
+                
+                item.innerHTML = `
+                    <div class="match-item-teams">${match.home_team} vs ${match.away_team}</div>
+                    <div class="match-item-meta">Match ID: ${match.match_id} | ${match.events.length} Key Events</div>
+                `;
+                listContainer.appendChild(item);
+            });
+            
+            renderActiveMatch();
+        }
+
+        function selectMatch(idx) {
+            activeMatchIdx = idx;
+            document.querySelectorAll(".match-item").forEach((el, i) => {
+                el.className = `match-item ${i === activeMatchIdx ? "active" : ""}`;
+            });
+            renderActiveMatch();
+        }
+
+        function setMinute(min) {
+            activeMinute = min;
+            document.querySelectorAll(".minute-btn").forEach((btn) => {
+                const isMatch = parseInt(btn.innerText) === min;
+                btn.className = `minute-btn ${isMatch ? "active" : ""}`;
+            });
+            renderActiveMatch();
+        }
+
+        function calculateScoreAtMinute(events, targetMin) {
+            let homeGoals = 0;
+            let awayGoals = 0;
+            events.forEach(e => {
+                if (e.minute <= targetMin && e.type === "Goal") {
+                    if (e.team === MATCHES_DATA[activeMatchIdx].home_team) {
+                        homeGoals++;
+                    } else {
+                        awayGoals++;
+                    }
+                }
+            });
+            return `${homeGoals} - ${awayGoals}`;
+        }
+
+        function getFormatPredictionName(teamVal, homeName, awayName) {
+            if (teamVal === "home") return homeName;
+            if (teamVal === "away") return awayName;
+            if (teamVal === "no_more_goals") return "No More Goals";
+            if (teamVal === "home_win") return `${homeName} Win`;
+            if (teamVal === "away_win") return `${awayName} Win`;
+            if (teamVal === "draw") return "Draw";
+            return teamVal;
+        }
+
+        function renderActiveMatch() {
+            const match = MATCHES_DATA[activeMatchIdx];
+            if (!match) return;
+
+            document.getElementById("activeMatchTitle").innerText = `${match.home_team} vs ${match.away_team}`;
+            document.getElementById("homeTeamName").innerText = match.home_team;
+            document.getElementById("awayTeamName").innerText = match.away_team;
+            
+            // Calculate Score
+            document.getElementById("liveScore").innerText = calculateScoreAtMinute(match.events, activeMinute);
+            
+            // Render Timeline (Up to activeMinute)
+            document.getElementById("timelineTitle").innerText = `Timeline (Up to ${activeMinute}')`;
+            const timelineContainer = document.getElementById("eventsTimeline");
+            timelineContainer.innerHTML = "";
+            
+            const pastEvents = match.events.filter(e => e.minute <= activeMinute);
+            if (pastEvents.length === 0) {
+                timelineContainer.innerHTML = `<div class="empty-timeline">No events recorded up to ${activeMinute}'</div>`;
+            } else {
+                pastEvents.forEach(e => {
+                    const row = document.createElement("div");
+                    row.className = "timeline-event";
+                    
+                    let dotClass = "";
+                    if (e.type === "Goal") dotClass = "goal";
+                    else if (e.type === "Card") dotClass = "card";
+                    
+                    row.innerHTML = `
+                        <div class="timeline-dot ${dotClass}"></div>
+                        <div class="event-time">${e.minute}:${e.second.toString().padStart(2, '0')}</div>
+                        <div class="event-desc">
+                            <strong>${e.team}</strong> | ${e.type}${e.player ? ` (${e.player})` : ""}${e.details ? ` - ${e.details}` : ""}
+                        </div>
+                    `;
+                    timelineContainer.appendChild(row);
+                });
+            }
+
+            // Render Future Events (What Happened Next)
+            const futureContainer = document.getElementById("futureEventsBox");
+            futureContainer.innerHTML = "";
+            const futureEvents = match.events.filter(e => e.minute > activeMinute);
+            
+            if (futureEvents.length === 0) {
+                futureContainer.innerHTML = `<div class="empty-timeline">No remaining events (Match is finished)</div>`;
+            } else {
+                const badgeBox = document.createElement("div");
+                badgeBox.className = "future-badge-container";
+                
+                futureEvents.forEach(e => {
+                    const badge = document.createElement("div");
+                    badge.className = "future-badge";
+                    let icon = "⚽";
+                    if (e.type === "Card") icon = "🟨/🟥";
+                    else if (e.type === "Substitution") icon = "🔄";
+                    badge.innerText = `${icon} [${e.minute}'] ${e.team} - ${e.type}${e.player ? ` (${e.player})` : ""}`;
+                    badgeBox.appendChild(badge);
+                });
+                futureContainer.appendChild(badgeBox);
+            }
+
+            // Render Predictions
+            const minutePredictions = match.predictions[activeMinute.toString()];
+            if (minutePredictions) {
+                // Qwen (Model 1)
+                const qwen = minutePredictions.model_1;
+                if (qwen) {
+                    const p = qwen.predictions;
+                    const g = qwen.grades;
+                    
+                    document.getElementById("qwenRead").innerText = p.situational_read || "No read available.";
+                    
+                    // Next Goal
+                    const nGoalName = getFormatPredictionName(p.next_goal, match.home_team, match.away_team);
+                    document.getElementById("qwenNextGoalVal").innerText = `${nGoalName} (${Math.round(p.next_goal_confidence * 100)}%)`;
+                    document.getElementById("qwenNextGoalBar").style.width = `${p.next_goal_confidence * 100}%`;
+                    
+                    // Next Chance
+                    const nChanceName = getFormatPredictionName(p.next_clear_chance, match.home_team, match.away_team);
+                    document.getElementById("qwenNextChanceVal").innerText = `${nChanceName} (${Math.round(p.next_clear_chance_confidence * 100)}%)`;
+                    document.getElementById("qwenNextChanceBar").style.width = `${p.next_clear_chance_confidence * 100}%`;
+
+                    // Final Result
+                    const finalResultName = getFormatPredictionName(p.final_result, match.home_team, match.away_team);
+                    document.getElementById("qwenFinalResultVal").innerText = `${finalResultName} (${Math.round(p.final_result_confidence * 100)}%)`;
+                    document.getElementById("qwenFinalResultBar").style.width = `${p.final_result_confidence * 100}%`;
+
+                    // Grade Card
+                    const isCorrect = g.final_result_grade === 1;
+                    const card = document.getElementById("qwenGradeCard");
+                    const label = document.getElementById("qwenGradeVal");
+                    
+                    card.className = `grade-card ${isCorrect ? "correct" : "incorrect"}`;
+                    label.innerText = isCorrect ? `Correct (Actual: ${getFormatPredictionName(g.actual.final_result, match.home_team, match.away_team)})` : `Incorrect (Actual: ${getFormatPredictionName(g.actual.final_result, match.home_team, match.away_team)})`;
+                }
+
+                // Gemma (Model 2)
+                const gemma = minutePredictions.model_2;
+                if (gemma) {
+                    const p = gemma.predictions;
+                    const g = gemma.grades;
+                    
+                    document.getElementById("gemmaRead").innerText = p.situational_read || "No read available.";
+                    
+                    // Next Goal
+                    const nGoalName = getFormatPredictionName(p.next_goal, match.home_team, match.away_team);
+                    document.getElementById("gemmaNextGoalVal").innerText = `${nGoalName} (${Math.round(p.next_goal_confidence * 100)}%)`;
+                    document.getElementById("gemmaNextGoalBar").style.width = `${p.next_goal_confidence * 100}%`;
+                    
+                    // Next Chance
+                    const nChanceName = getFormatPredictionName(p.next_clear_chance, match.home_team, match.away_team);
+                    document.getElementById("gemmaNextChanceVal").innerText = `${nChanceName} (${Math.round(p.next_clear_chance_confidence * 100)}%)`;
+                    document.getElementById("gemmaNextChanceBar").style.width = `${p.next_clear_chance_confidence * 100}%`;
+
+                    // Final Result
+                    const finalResultName = getFormatPredictionName(p.final_result, match.home_team, match.away_team);
+                    document.getElementById("gemmaFinalResultVal").innerText = `${finalResultName} (${Math.round(p.final_result_confidence * 100)}%)`;
+                    document.getElementById("gemmaFinalResultBar").style.width = `${p.final_result_confidence * 100}%`;
+
+                    // Grade Card
+                    const isCorrect = g.final_result_grade === 1;
+                    const card = document.getElementById("gemmaGradeCard");
+                    const label = document.getElementById("gemmaGradeVal");
+                    
+                    card.className = `grade-card ${isCorrect ? "correct" : "incorrect"}`;
+                    label.innerText = isCorrect ? `Correct (Actual: ${getFormatPredictionName(g.actual.final_result, match.home_team, match.away_team)})` : `Incorrect (Actual: ${getFormatPredictionName(g.actual.final_result, match.home_team, match.away_team)})`;
+                }
+            }
+        }
+
+        window.onload = initDashboard;
+    </script>
+</body>
+</html>
